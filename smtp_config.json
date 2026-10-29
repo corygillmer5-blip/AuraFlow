@@ -1,0 +1,6 @@
+{
+    "smtp_server": "smtp.ionos.com",
+    "smtp_port": 587,
+    "sender_email": "admin@wizdumbllc.com",
+    "smtp_password": "Iamwrath1!!!!!!"
+}
