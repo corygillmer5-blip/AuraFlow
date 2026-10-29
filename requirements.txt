@@ -1,3 +1,6 @@
 flask
 stripe
 libsql-client
+gunicorn
+requests
+python-dotenv
