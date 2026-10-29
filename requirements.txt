@@ -1,4 +1,3 @@
-Flask
+flask
+stripe
 libsql-client
-requests
-gunicorn
