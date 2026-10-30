@@ -4,8 +4,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Configure Stripe API key from environment variables
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
+stripe.api.key = os.environ.get("STRIPE_SECRET_KEY")
 endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
 @app.route("/")
@@ -21,24 +20,23 @@ def stripe_webhook():
         event = stripe.Webhook.construct_event(
             payload, sig_header, endpoint_secret
         )
-    except ValueError as e:
-        # Invalid payload
+    except ValueError:
         return jsonify({"error": "Invalid payload"}), 400
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
+    except stripe.error.SignatureVerificationError:
         return jsonify({"error": "Invalid signature"}), 400
 
-    # Handle the checkout.session.completed event
     if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
+        session_data = event["data"]["object"]
         
-        # Safely convert Stripe session object to a dictionary to extract details
-        session_dict = session.to_dict()
-        customer_email = session_dict.get("customer_email") or session_dict.get("customer_details", {}).get("email")
-        
+        # Pull email directly using safe dictionary get if it's a dict, 
+        # or fallback to attribute/data lookup
+        customer_email = None
+        if isinstance(session_data, dict):
+            customer_email = session_data.get("customer_email") or session_data.get("customer_details", {}).get("email")
+        else:
+            customer_email = getattr(session_data, "customer_email", None)
+            
         print(f"Payment successful for email: {customer_email}")
-        
-        # Add your fulfillment or database logging logic here
 
     return jsonify({"status": "success"}), 200
 
