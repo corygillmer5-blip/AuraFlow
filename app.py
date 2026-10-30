@@ -7,8 +7,8 @@ app = Flask(__name__)
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
-# Turso connection credentials using auraflowdb
-TURSO_URL = os.environ.get("TURSO_DATABASE_URL", "wss://auraflowdb-auraflow2026.aws-us-west-2.turso.io")
+# Turso connection credentials using clean auraflowdb
+TURSO_URL = os.environ.get("TURSO_DATABASE_URL", "wss://auraflowdb.aws-us-west-2.turso.io")
 TURSO_AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN")
 
 def get_db_client():
