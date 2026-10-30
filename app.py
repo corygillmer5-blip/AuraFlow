@@ -4,7 +4,8 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-stripe.api.key = os.environ.get("STRIPE_SECRET_KEY")
+# Fixed api_key with an underscore
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
 @app.route("/")
@@ -28,8 +29,6 @@ def stripe_webhook():
     if event["type"] == "checkout.session.completed":
         session_data = event["data"]["object"]
         
-        # Pull email directly using safe dictionary get if it's a dict, 
-        # or fallback to attribute/data lookup
         customer_email = None
         if isinstance(session_data, dict):
             customer_email = session_data.get("customer_email") or session_data.get("customer_details", {}).get("email")
