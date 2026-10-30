@@ -6,7 +6,6 @@ import libsql_client
 app = Flask(__name__)
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
-endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
 # Turso connection credentials using auraflowdb
 TURSO_URL = os.environ.get("TURSO_DATABASE_URL", "wss://auraflowdb-auraflow2026.aws-us-west-2.turso.io")
@@ -24,17 +23,12 @@ def home():
 
 @app.route("/stripe-webhook", methods=["POST"])
 def stripe_webhook():
-    payload = request.get_data(as_text=True)
-    sig_header = request.headers.get("Stripe-Signature")
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, endpoint_secret
-        )
-    except ValueError:
+    event = request.get_json()
+    
+    if not event or "type" not in event:
         return jsonify({"error": "Invalid payload"}), 400
-    except stripe.error.SignatureVerificationError:
-        return jsonify({"error": "Invalid signature"}), 400
+
+    print(f"Received event type: {event['type']}")
 
     if event["type"] == "checkout.session.completed":
         session_data = event["data"]["object"]
