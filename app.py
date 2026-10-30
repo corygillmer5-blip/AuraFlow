@@ -1,12 +1,22 @@
 import os
 import stripe
 from flask import Flask, request, jsonify
+import libsql_client
 
 app = Flask(__name__)
 
-# Fixed api_key with an underscore
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
+
+# Turso connection credentials using auraflowdb
+TURSO_URL = os.environ.get("TURSO_DATABASE_URL", "wss://auraflowdb-auraflow2026.aws-us-west-2.turso.io")
+TURSO_AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN")
+
+def get_db_client():
+    return libsql_client.create_client_sync(
+        url=TURSO_URL,
+        auth_token=TURSO_AUTH_TOKEN
+    )
 
 @app.route("/")
 def home():
@@ -36,6 +46,19 @@ def stripe_webhook():
             customer_email = getattr(session_data, "customer_email", None)
             
         print(f"Payment successful for email: {customer_email}")
+
+        # Database action with auraflowdb
+        try:
+            client = get_db_client()
+            client.execute(
+                "INSERT INTO users (email, status) VALUES (?, ?)",
+                (customer_email, "active")
+            )
+            client.close()
+            print("Successfully recorded user in auraflowdb!")
+        except Exception as e:
+            print(f"Database error: {e}")
+            return jsonify({"error": str(e)}), 400
 
     return jsonify({"status": "success"}), 200
 
